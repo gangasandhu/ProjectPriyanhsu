@@ -10,18 +10,18 @@ const homeController = express.Router()
 
 
 homeController.get('/', util.logRequest, (req, res) => {
-    res.sendFile('index.html', {root: config.ROOT})
+    res.render('index', {
+        user: req.user,  // Pass user data if available
+        title: "Home Page"
+    })
 })
 
 
-homeController.get('/home', util.logRequest, (req, res) => {
-    res.sendFile('index.html', {root: config.ROOT})
-})
-
-
-
-homeController.get('/about', (req, res) => {
-    res.sendFile('about.html', { root: config.ROOT })
+homeController.get('/about', util.logRequest, (req, res) => {
+    res.render('about', {
+        user: req.user,  // Pass user data if available
+        title: "Home Page"
+    })
 })
 
 

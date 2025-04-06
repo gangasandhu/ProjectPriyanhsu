@@ -2,17 +2,17 @@
 <html lang="en">
 
 <head>
-
+  <%- include('partials/head') %>
 </head>
 
 <body>
   <div class="container">
     <header id="header">
-
+      <%- include('partials/navbar', { currentPage: 'home', user: user }) %>
     </header>
 
     <hr />
-    <main class="d-flex jusitfy-content-center align-items-center flex-column  role=" main">
+    <main class="d-flex jusitfy-content-center align-items-center flex-column"  role="main">
       <div id="blogPost" class="container">
         <div class="card">
           <div class="card-header">
@@ -30,7 +30,7 @@
 
       <!-- Blogs Section -->
       <section class="container mt-5 w-75 m-auto" id="blogSection">
-        <h2 class="text-center mb-4">Latest Blogs</h2>
+        <h2 class="text-center mb-4">Latest Blogs <%= title %></h2>
         <div class="row" id="blogCardsRow">
           <!-- Blog cards will be dynamically added here -->
         </div>
@@ -40,8 +40,7 @@
     <div class="h4 text-center">
       <hr>
       <br />
-      <div id="footer">
-      </div>
+      <%- include('partials/footer') %>
 
     </div>
 
@@ -49,7 +48,7 @@
   </div>
   <script src="js/bootstrap.bundle.min.js"></script>
   <script src="js/home.js"></script>
-  <script src="js/partials.js"></script>
+  <!-- <script src="js/partials.js"></script> -->
 
 </body>
 

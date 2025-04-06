@@ -2,13 +2,13 @@
 <html lang="en">
 
 <head>
-
+  <%- include('partials/head') %>
 </head>
 
 <body>
   <div class="container">
     <header id="header">
-
+      <%- include('partials/navbar', { currentPage: 'home', user: user }) %>
     </header>
     <hr />
     <main role="main">
@@ -39,8 +39,8 @@
         </div>
         <blockquote class="blockquote">
           <p>
-            Developers: Ganga Singh and Shivanshu Prabhakar
-            Welcome to SmartBlog, where cutting-edge technology meets the art of blogging. In today's digital landscape,
+            Developers: Priyanshu
+            Welcome to Blogger, where cutting-edge technology meets the art of blogging. In today's digital landscape,
             content creation is not just about words on a page—it's about engaging audiences, driving conversations, and
             making an impact. SmartBlog redefines the blogging experience by harnessing the power of artificial
             intelligence to elevate content creation to new heights.</p>
@@ -54,11 +54,12 @@
       </div>
     </main>
     <hr />
-    <div id="footer"> </div>
+    <div id="footer"> 
+      <%- include('partials/footer') %>
+    </div>
 
   </div>
   <script src="js/bootstrap.bundle.min.js"></script>
-  <script src="js/partials.js"></script>
 </body>
 
 </html>

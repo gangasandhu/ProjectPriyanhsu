@@ -1,32 +1,40 @@
-const LocalStrategy = require('passport-local').Strategy
-const bcrypt = require('bcrypt')
+const passport = require('passport');
+const LocalStrategy = require('passport-local').Strategy;
+const bcrypt = require('bcrypt');
+const { ObjectId } = require('mongodb');
+const client = require('../../models/util').getMongoClient(false);
 
 
-function initialize(passport, getUserByUsername, getUserById) {
-    const authenticateUser = async (username, password, done) => {
-        const user = getUserByUsername(username)
-        if (user == null) {
-            console.log("No user with that name")
-            return done(null, false, { message: 'No user with that username' })
-        }
-
-        try {
-            if (await bcrypt.compare(password, user.password)) {
-                console.log(user)
-                return done(null, user)
-            } else {
-                console.log("password incorrect")
-                return done(null, false, { message: 'Password incorrect' })
+module.exports = function(passport) {
+    passport.use(new LocalStrategy(
+        async (username, password, done) => {
+            try {
+                const collection = client.db().collection('users');
+                
+                const user = await collection.findOne({ username });
+                if (!user) return done(null, false, { message: 'Incorrect username' });
+                
+                const isMatch = await bcrypt.compare(password, user.password);
+                if (!isMatch) return done(null, false, { message: 'Incorrect password' });
+                
+                return done(null, user);
+            } catch (err) {
+                return done(err);
             }
-        } catch (error) {
-            done(error)
         }
-    }
-    passport.use(new LocalStrategy({ usernameField: 'username' }, authenticateUser))
-    passport.serializeUser((user, done) => done(null, user.id))
-    passport.deserializeUser((id, done) => {
-        return  done(null, getUserById(id))
-    })
-}
+    ));
 
-module.exports = initialize
+    passport.serializeUser((user, done) => {
+        done(null, user._id.toString()); // Serialize MongoDB _id
+    });
+
+    passport.deserializeUser(async (id, done) => {
+        try {
+            const collection = client.db().collection('users');
+            const user = await collection.findOne({ _id: new ObjectId(id) });
+            done(null, user);
+        } catch (err) {
+            done(err, null);
+        }
+    });
+};

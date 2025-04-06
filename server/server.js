@@ -12,6 +12,7 @@ const server = express()
 const MongoClient = require("mongodb").MongoClient
 const flash = require('express-flash')
 const session = require('express-session')
+const MongoStore = require('connect-mongo');
 const passport = require('passport')
 
 /*
@@ -31,10 +32,11 @@ const aiController = require("../controllers/aiController")
 //----------------------------------------------------------------
 
 // setting view
-//server.set('view engine', 'ejs')
-//----------------------------------------------------------------
+server.set('view engine', 'ejs')
+server.set('views', path.join(__dirname, '../views')); // Create a 'views' folder
+// ----------------------------------------------------------------
 // middleware
-server.use(express.static(config.ROOT))
+server.use(express.static(path.join(__dirname, '../views')));
 server.use(express.json())
 server.use(express.urlencoded({ extended: false }))
 server.use(flash())
@@ -42,7 +44,14 @@ server.use(session({
   secret: process.env.SESSION_SECRET,
   resave: false,
   saveUninitialized: false,
-}))
+  store: MongoStore.create({
+      mongoUrl: process.env.DB_URI,
+      ttl: 14 * 24 * 60 * 60 // 14 days
+  }),
+  cookie: { 
+      maxAge: 1000 * 60 * 60 * 24 // 1 day
+  }
+}));
 server.use(passport.initialize())
 server.use(passport.session())
 server.use(homeController)

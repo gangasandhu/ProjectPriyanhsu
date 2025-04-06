@@ -1,77 +1,101 @@
-const util = require('../models/util.js')
-const config = require("../server/config/config.js")
-const Post = require("../models/post.js")
-const client = util.getMongoClient(false)
-const express = require('express')
-const postsController = express.Router()
+const util = require('../models/util.js');
+const config = require("../server/config/config.js");
+const Post = require("../models/post.js");
+const client = util.getMongoClient(false);
+const express = require('express');
+const postsController = express.Router();
 
 function checkAuthenticated(req, res, next) {
     if (req.isAuthenticated()) {
-        return next()
+        return next();
     }
-    res.redirect('/login')
+    res.redirect('/login');
 }
 
+// Get all posts (API endpoint)
+postsController.get('/posts', util.logRequest, async (req, res) => {
+    try {
+        const collection = client.db().collection('posts');
+        const posts = await util.find(collection, {});
+        res.status(200).json(posts);
+    } catch (error) {
+        res.status(500).json({ error: "Internal Server Error" });
+    }
+});
 
-postsController.get('/posts', util.logRequest, async (req, res, next) => {
-    let collection = client.db().collection('posts')
-    let posts = await util.find(collection, {})
-    //Utils.saveJson(__dirname + '/../data/topics.json', JSON.stringify(topics))
-    res.status(200).json(posts)
-
-})
-
+// Get single post
 postsController.get('/posts/:id', util.logRequest, async (req, res) => {
     try {
-        let collection = client.db().collection('posts')
-
-        const post = (await util.find(collection, {id: parseInt(req.params.id)}))[0]
+        const collection = client.db().collection('posts');
+        const post = (await util.find(collection, {id: parseInt(req.params.id)}))[0];
 
         if (post) {
             res.json(post);
         } else {
-            res.status(404).json({ error: "Post does not exist" });
+            res.status(404).json({ error: "Post not found" });
         }
     } catch (error) {
-        console.log("Error while querying the database:", error);
         res.status(500).json({ error: "Internal Server Error" });
     }
-})
-
-postsController.get('/postMessage', util.logRequest, checkAuthenticated, async (req, res, next) => {
-    res.sendFile('postMessage.html', { root: config.ROOT })
-
-})
-postsController.post('/addPost', util.logRequest, checkAuthenticated, async (req, res, next) => {
-    let collection = client.db().collection('posts')
-    let topic = req.body.topic
-    let message = req.body.message
-    let user = req.body.by
-    let post = Post(topic, message, user)
-    util.insertOne(collection, post)
-
-    // res.json(
-    //     {
-    //         message: `You post was added to the ${topic} forum`
-    //     }
-    // )
-    //Utils.saveJson(__dirname + '/../data/posts.json', JSON.stringify(posts))
-    res.redirect('/posts.html')
-})
-
-postsController.delete('/posts/:id', util.logRequest, async (req, res) => {
-    const postId = parseInt(req.params.id);
-
-    const collection = client.db().collection('posts');
-    console.log("start deleting")
-    const deletedPost = await util.deleteOne(collection, { id: postId });
-
-    console.log({ message: "Post deleted successfully", deletedPost });
-    res.redirect('/posts.html')
-
 });
 
+// Get user's posts
+postsController.get('/userPosts', util.logRequest, checkAuthenticated, async (req, res) => {
+    try {
+        const collection = client.db().collection('posts');
+        const posts = await util.find(collection, { "Posted By": req.user.username });
+        
+        res.render('userPosts', {
+            user: req.user,
+            posts: posts,
+            messages: {
+                error: req.flash('error'),
+                success: req.flash('success')
+            }
+        });
+    } catch (error) {
+        req.flash('error', 'Failed to load your posts');
+        res.redirect('/');
+    }
+});
 
+// Render post message form
+postsController.get('/postMessage', util.logRequest, checkAuthenticated, (req, res) => {
+    res.render('postMessage', { 
+        user: req.user,
+        messages: {
+            error: req.flash('error'),
+            success: req.flash('success')
+        }
+    });
+});
 
+// Handle post submission
+postsController.post('/addPost', util.logRequest, checkAuthenticated, async (req, res) => {
+    try {
+        const { topic, message, by } = req.body;
+        const collection = client.db().collection('posts');
+        
+        const post = Post(topic, message, by);
+        await util.insertOne(collection, post);
+        
+        req.flash('success', 'Post created successfully!');
+        res.redirect('/userPosts');
+    } catch (error) {
+        req.flash('error', 'Failed to create post');
+        res.redirect('/postMessage');
+    }
+});
 
-module.exports = postsController
+// Delete post
+postsController.delete('/posts/:id', util.logRequest, checkAuthenticated, async (req, res) => {
+    try {
+        const collection = client.db().collection('posts');
+        await util.deleteOne(collection, { id: parseInt(req.params.id) });
+        res.json({ success: true });
+    } catch (error) {
+        res.status(500).json({ error: "Failed to delete post" });
+    }
+});
+
+module.exports = postsController;
