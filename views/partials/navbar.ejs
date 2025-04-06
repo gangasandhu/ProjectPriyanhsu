@@ -29,8 +29,14 @@
                     </ul>
                 </li>
                 <li class="nav-item">
-                    <a class="nav-link  text-white <%= currentPage === 'about' ? 'active' : '' %>" href="/about">About Us</a>
+                    <a class="nav-link  text-white <%= currentPage === 'about' ? 'active' : '' %>" href="/about">About
+                        Us</a>
                 </li>
+                <% if(user && user.role==='admin' ) { %>
+                    <li class="nav-item">
+                        <a class="btn btn-primary <%= currentPage === 'admin' ? 'active' : '' %>" href="/admin/dashboard">Admin Dashboard</a>
+                    </li>
+                    <% } %>
             </ul>
 
             <% if(!user) { %>
@@ -38,14 +44,14 @@
                     <a href="/register" class="btn btn-warning">Register</a>
                     <a href="/login" class="btn btn-primary">Log in</a>
                 </div>
-            <% } else { %>
+                <% } else { %>
                     <div class="d-flex align-items-center">
                         <p class="mb-0 me-3">
                             <%= user.username %>
                         </p>
                         <a href="/logout" class="btn btn-danger">Log out</a>
                     </div>
-            <% } %>
+                    <% } %>
         </div>
     </div>
 </nav>

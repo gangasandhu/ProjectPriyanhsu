@@ -24,7 +24,7 @@ const homeController = require('../controllers/homeController')
 const postsController = require('../controllers/postsController')
 const userController = require("../controllers/userController")
 const aiController = require("../controllers/aiController")
-
+const adminController = require("../controllers/adminController")
 
 //----------------------------------------------------------------
 
@@ -58,6 +58,7 @@ server.use(homeController)
 server.use(postsController)
 server.use(userController)
 server.use(aiController)
+server.use(adminController)
 
 server.get('/logs', async (req, res, next) => {
   util.logRequest(req,res,next)
